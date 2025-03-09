@@ -1,1 +1,1 @@
-"# amulettShop"
+"# amuletShop" 
