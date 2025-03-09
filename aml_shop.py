@@ -2,10 +2,10 @@ import telebot
 from telebot import types
 from datetime import date
 
-token="7747531890:AAFDSlj0_dra8nZQBj_n9vpyUtDBNMEn4HI"
+token="7757986535:AAGQ-ws4586vY-1A3d_9AdNm_sQb3T_kNNc"
 bot = telebot.TeleBot(token)
 
-TO_CHAT_ID = "7532173117"
+TO_CHAT_ID = "5756236816"
 
 
 from_chat_id = ""
@@ -73,10 +73,6 @@ def f_back_to_menu(call):
 
 @bot.callback_query_handler(func=lambda call: call.data == "back_to_menu")
 def menu(call):
-  global sup, pay
-  sup=0
-  pay=0
-
   bot.delete_message(call.message.chat.id, call.message.message_id)
   keyboard = types.InlineKeyboardMarkup(row_width=2)
 
@@ -87,8 +83,20 @@ def menu(call):
   reviews = types.InlineKeyboardButton(text="Отзывы 🌟", callback_data="reviews", url='t.me/+xx83SO52oclhYWEy')
 
   keyboard.add(catalog, profile, support, garanties, reviews)
-  main_menu_img = open('/content/img/main_menu.jpg', 'rb')
+  main_menu_img = open('img/main_menu.jpg', 'rb')
   bot.send_photo(call.message.chat.id, main_menu_img, reply_markup=keyboard)
+
+@bot.message_handler(content_types=['text', 'photo', 'video'])
+def support_forward(message):
+    global sup
+    if sup==1:
+        keyboard = types.InlineKeyboardMarkup(row_width=1)
+        back = types.InlineKeyboardButton(text="Назад", callback_data="back_to_menu")
+        keyboard.add(back)
+        bot.send_message(message.chat.id, text='Ваша жалоба успешно отправлена. Мы обязательно рассмотрим ее и свяжемся с вами в ближайшее время!',reply_markup=keyboard)
+        bot.forward_message(TO_CHAT_ID, message.chat.id, message.message_id)
+        bot.delete_message(message.chat.id, message.message_id - 1)
+        sup=0
 
 @bot.message_handler(content_types=['photo', 'text'])
 def forward_mes(message):
@@ -134,7 +142,7 @@ def callback_copy_text(call):
   fortnite = types.InlineKeyboardButton(text="Fortnite 🎮", callback_data="fortnite")
 
   keyboard.add(fortnite, back)
-  catalog_img = open('/content/img/catalog.jpg', 'rb')
+  catalog_img = open('img/catalog.jpg', 'rb')
   bot.send_photo(call.message.chat.id, catalog_img, caption='Выберите игру', reply_markup=keyboard)
 
 
@@ -147,21 +155,8 @@ def support(call):
   keyboard = types.InlineKeyboardMarkup(row_width=1)
   back = types.InlineKeyboardButton(text="Назад", callback_data="back_to_menu")
   keyboard.add(back)
-  support_img = open('/content/img/support.jpg', 'rb')
+  support_img = open('img/support.jpg', 'rb')
   bot.send_photo(call.message.chat.id, support_img, caption='Здравствуйте! \n\nПожалуйста, подробно опишите вашу проблему. Это поможет нам быстрее и точнее решить ваш вопрос. Также укажите ваш @username для связи с вами. После этого ожидайте ответ со стороны поддержки.', reply_markup=keyboard)
-
-
-@bot.message_handler(content_types=['text', 'photo', 'video'])
-def support_forward(message):
-    global sup
-    if sup==1:
-        keyboard = types.InlineKeyboardMarkup(row_width=1)
-        back = types.InlineKeyboardButton(text="Назад", callback_data="back_to_menu")
-        keyboard.add(back)
-        bot.send_message(message.chat.id, text='Ваша жалоба успешно отправлена. Мы обязательно рассмотрим ее и свяжемся с вами в ближайшее время!',reply_markup=keyboard)
-        bot.forward_message(TO_CHAT_ID, message.chat.id, message.message_id)
-        bot.delete_message(message.chat.id, message.message_id - 1)
-        sup=0
 
 
 @bot.callback_query_handler(func=lambda call: call.data == "profile")
@@ -172,7 +167,7 @@ def profile(call):
   back = types.InlineKeyboardButton(text="Назад", callback_data="back_to_menu")
   keyboard.add(history, back)
 
-  catalog_img = open('/content/img/profile.jpg', 'rb')
+  catalog_img = open('img/profile.jpg', 'rb')
   bot.send_photo(call.message.chat.id, catalog_img, caption='\n🎮 Профильㅤㅤㅤㅤㅤㅤㅤ\n\n👤 Имя: '+ str(call.from_user.first_name) +'\n\n🔑 id: '+ str(call.message.chat.id)+"\n", reply_markup=keyboard)
 
 @bot.callback_query_handler(func=lambda call: call.data == "history")
@@ -182,7 +177,7 @@ def history(call):
   back = types.InlineKeyboardButton(text="Назад", callback_data="profile")
   keyboard.add(back)
 
-  history_img = open('/content/img/history.jpg', 'rb')
+  history_img = open('img/history.jpg', 'rb')
   bot.send_photo(call.message.chat.id, history_img, caption= history_list[-1]+ "\n" + history_list[-2] + "\n" + history_list[-3], reply_markup=keyboard )
 
 @bot.callback_query_handler(func=lambda call: call.data == "fortnite")
@@ -195,7 +190,7 @@ def fortnite_list(call):
   back = types.InlineKeyboardButton(text="Назад", callback_data="catalog")
   keyboard.add(v_bucks, gift, band, back)
 
-  fortnite_img = open('/content/img/fortnite.jpg', 'rb')
+  fortnite_img = open('img/fortnite.jpg', 'rb')
   bot.send_photo(call.message.chat.id,fortnite_img,caption="Выберите товар", reply_markup=keyboard)
 
 @bot.callback_query_handler(func=lambda call: call.data == "v_bucks")
@@ -209,7 +204,7 @@ def v_bucks(call):
   back = types.InlineKeyboardButton(text="Назад", callback_data="fortnite")
   keyboard.add(v_bucks10, v_bucks28, v_bucks50, v_bucks13, back)
 
-  v_bucks_img = open('/content/img/v_bucks.jpg', 'rb')
+  v_bucks_img = open('img/v_backs.jpg', 'rb')
   bot.send_photo(call.message.chat.id,v_bucks_img,caption="Категория: В-Баксы \n\n⚠️ Перед покупкой В-Баксов ознакомьтесь! https://telegra.ph/Pokupka-03-07", reply_markup=keyboard)
 
 @bot.callback_query_handler(func=lambda call: call.data == "v_bucks10")
@@ -269,7 +264,7 @@ def gift(call):
   back = types.InlineKeyboardButton(text="Назад", callback_data="fortnite")
   keyboard.add(v_bucks6_gift, v_bucks8_gift, v_bucks10_gift, v_bucks12_gift, v_bucks15_gift, v_bucks18_gift, v_bucks20_gift, v_bucks22_gift, v_bucks24_gift, v_bucks26_gift, v_bucks28_gift, v_bucks35_gift, back)
 
-  gift_img = open('/content/img/gift.jpg', 'rb')
+  gift_img = open('img/gift.jpg', 'rb')
   bot.send_photo(call.message.chat.id, gift_img,caption='''🗒️Категория: Подарки
 
 🎁 Наши подарочные аккаунты (ДОБАВЛЯТЬ ВСЕ) иначе не сможем подарить вам предмет! 🎁
@@ -410,28 +405,14 @@ def v_bucks35_gift(call):
 
 @bot.callback_query_handler(func=lambda call: call.data == "band")
 def band(call):
-  global product, cost
-  product = "band"
+  global product, cost, description
+  product = "отряд"
   cost = 599
-  bot.delete_message(call.message.chat.id, call.message.message_id)
-  keyboard = types.InlineKeyboardMarkup(row_width=1)
-  payment = types.InlineKeyboardButton(text="✅ Я оплатил", callback_data="payment")
-  back = types.InlineKeyboardButton(text="Назад", callback_data="fortnite")
-  keyboard.add(payment, back)
-  band_img = open('/content/img/band.jpg', 'rb')
-  bot.send_photo(call.message.chat.id, band_img ,caption='''
+  description = "Подписка активна в течение 30 дней с момента оформления заказа и не подлежит автопродлению. Перед покупкой Отряда в Fortnite убедитесь, что у вас нет действующей подписки. В противном случае вы можете столкнуться с ошибками в игре, и предметы из отряда не будут доступны!"
+  prepayment(call)
 
-🎮 Отряд
 
-💸 Цена: 599₽
 
-📌 Описание:
-Подписка активна в течение 30 дней с момента оформления заказа и не подлежит автопродлению. Перед покупкой Отряда в Fortnite убедитесь, что у вас нет действующей подписки. В противном случае вы можете столкнуться с ошибками в игре, и предметы из отряда не будут доступны!
-
-Оплата происходит на карту: 2202208166272568
-Внимание, отправляйте ровно ту сумму, которая указана в боте!
-
-После завершения платежа, пожалуйста, нажмите кнопку «Я оплатил» и отправьте скриншот с чеком оплаты и укажите ваш @username для получения В-баксов. А также После оплаты вам необходимо сообщить данные от вашей учетной записи Epic Games или же Xbox.''', reply_markup=keyboard)
 
 @bot.callback_query_handler(func=lambda call: call.data == "prepayment")
 def prepayment(call):
@@ -441,7 +422,7 @@ def prepayment(call):
   payment = types.InlineKeyboardButton(text="✅ Я оплатил", callback_data="payment")
   back = types.InlineKeyboardButton(text="Назад", callback_data="fortnite")
   keyboard.add(payment, back)
-  
+
   bot.send_message(call.message.chat.id, text=f'''
 🎮 {product}
 
