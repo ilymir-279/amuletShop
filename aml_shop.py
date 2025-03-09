@@ -2,15 +2,21 @@ import telebot
 from telebot import types
 from datetime import date
 
-token="7757986535:AAGQ-ws4586vY-1A3d_9AdNm_sQb3T_kNNc"
+token="7747531890:AAFDSlj0_dra8nZQBj_n9vpyUtDBNMEn4HI"
 bot = telebot.TeleBot(token)
 
 TO_CHAT_ID = "7532173117"
+
+
+from_chat_id = ""
+from_chat_call = ""
 
 start_id = 1
 sup = 0
 pay = 0
 product = ""
+cost = 0
+description = ""
 history_list = ["Здесь ничего нет 😢", "", ""]
 
 
@@ -30,6 +36,7 @@ def start(message):
 @bot.message_handler(func= lambda message: message.text ==  "✅ Я подписан")
 def chack_channels(message):
     sup=0
+    pay=0
     user_id = message.from_user.id
     channel_id = "@amulettshop"
 
@@ -80,10 +87,42 @@ def menu(call):
   reviews = types.InlineKeyboardButton(text="Отзывы 🌟", callback_data="reviews", url='t.me/+xx83SO52oclhYWEy')
 
   keyboard.add(catalog, profile, support, garanties, reviews)
-
   main_menu_img = open('/content/img/main_menu.jpg', 'rb')
   bot.send_photo(call.message.chat.id, main_menu_img, reply_markup=keyboard)
 
+@bot.message_handler(content_types=['photo', 'text'])
+def forward_mes(message):
+      global pay, from_chat_id, from_chat_call
+      from_chat_id = message.chat.id
+      from_chat_call = message.message_id
+
+      if pay == 1:
+        if message.content_type == 'photo':
+
+          keyboard = types.InlineKeyboardMarkup(row_width=1)
+          back = types.InlineKeyboardButton(text="Назад", callback_data="back_to_menu")
+          confirm = types.InlineKeyboardButton(text="Принять оплату", callback_data="confirm")
+          reject = types.InlineKeyboardButton(text="Отклонить", callback_data="reject")
+          keyboard.add(back)
+
+          bot.send_message(message.chat.id, text='Ваша оплата успешно отправлена. Мы обязательно рассмотрим ее и свяжемся с вами в ближайшее время!',reply_markup=keyboard)
+
+          keyboard.add(confirm, reject)
+          bot.forward_message(TO_CHAT_ID, message.chat.id, message.message_id)
+          bot.send_message(TO_CHAT_ID, text = product, reply_markup=keyboard)
+
+          bot.delete_message(message.chat.id, message.message_id - 1)
+          bot.delete_message(message.chat.id, message.message_id)
+
+          pay=0
+
+        else:
+          keyboard = types.InlineKeyboardMarkup(row_width=1)
+          back = types.InlineKeyboardButton(text="Заново", callback_data="payment")
+          keyboard.add(back)
+          bot.reply_to(message, "Произошла ошибка, отправьте скриншот вместе c вашим @username",reply_markup=keyboard)
+          bot.delete_message(message.chat.id, message.message_id-1)
+          bot.delete_message(message.chat.id, message.message_id)
 
 @bot.callback_query_handler(func=lambda call: call.data == "catalog")
 def callback_copy_text(call):
@@ -112,10 +151,10 @@ def support(call):
   bot.send_photo(call.message.chat.id, support_img, caption='Здравствуйте! \n\nПожалуйста, подробно опишите вашу проблему. Это поможет нам быстрее и точнее решить ваш вопрос. Также укажите ваш @username для связи с вами. После этого ожидайте ответ со стороны поддержки.', reply_markup=keyboard)
 
 
-  @bot.message_handler(content_types=['text'])
-  def forward_mes(message):
-      global sup
-      if sup==1:
+@bot.message_handler(content_types=['text', 'photo', 'video'])
+def support_forward(message):
+    global sup
+    if sup==1:
         keyboard = types.InlineKeyboardMarkup(row_width=1)
         back = types.InlineKeyboardButton(text="Назад", callback_data="back_to_menu")
         keyboard.add(back)
@@ -170,99 +209,45 @@ def v_bucks(call):
   back = types.InlineKeyboardButton(text="Назад", callback_data="fortnite")
   keyboard.add(v_bucks10, v_bucks28, v_bucks50, v_bucks13, back)
 
-  v_bucks_img = open('/content/img/v_backs.jpg', 'rb')
+  v_bucks_img = open('/content/img/v_bucks.jpg', 'rb')
   bot.send_photo(call.message.chat.id,v_bucks_img,caption="Категория: В-Баксы \n\n⚠️ Перед покупкой В-Баксов ознакомьтесь! https://telegra.ph/Pokupka-03-07", reply_markup=keyboard)
 
 @bot.callback_query_handler(func=lambda call: call.data == "v_bucks10")
 def v_bucks10(call):
-  global product
+  global product, cost, description
   product = " 1000 v-bucks"
-  bot.delete_message(call.message.chat.id, call.message.message_id)
-  keyboard = types.InlineKeyboardMarkup(row_width=1)
-  payment = types.InlineKeyboardButton(text="✅ Я оплатил", callback_data="payment")
-  back = types.InlineKeyboardButton(text="Назад", callback_data="v_bucks")
-  keyboard.add(payment, back)
+  cost = 749
+  description = "После оплаты вам необходимо сообщить данные от вашей учетной записи Epic Games."
 
-  bot.send_message(call.message.chat.id, text='''
-🎮 1000 В-баксов
+  prepayment(call)
 
-💸 Цена: 749₽
-
-📌 Описание:
-После оплаты вам необходимо сообщить данные от вашей учетной записи Epic Games.
-
-Оплата происходит на карту: 2202208166272568
-Внимание, отправляйте ровно ту сумму, которая указана в боте!
-
-После завершения платежа, пожалуйста, нажмите кнопку «Я оплатил» и отправьте скриншот с чеком оплаты и укажите ваш @username для получения В-баксов.''', reply_markup=keyboard)
 
 @bot.callback_query_handler(func=lambda call: call.data == "v_bucks28")
 def v_bucks28(call):
-  global product
+  global product, cost, description
   product = " 2800 v-bucks"
-  bot.delete_message(call.message.chat.id, call.message.message_id)
-  keyboard = types.InlineKeyboardMarkup(row_width=1)
-  payment = types.InlineKeyboardButton(text="✅ Я оплатил", callback_data="payment")
-  back = types.InlineKeyboardButton(text="Назад", callback_data="v_bucks")
-  keyboard.add(payment, back)
-  bot.send_message(call.message.chat.id, text='''
-🎮 2800 В-баксов
+  cost = 1499
+  description = "После оплаты вам необходимо сообщить данные от вашей учетной записи Epic Games."
 
-💸 Цена: 1499₽
-
-📌 Описание:
-После оплаты вам необходимо сообщить данные от вашей учетной записи Epic Games.
-
-Оплата происходит на карту: 2202208166272568
-Внимание, отправляйте ровно ту сумму, которая указана в боте!
-
-После завершения платежа, пожалуйста, нажмите кнопку «Я оплатил» и отправьте скриншот с чеком оплаты и укажите ваш @username для получения В-баксов.''', reply_markup=keyboard)
+  prepayment(call)
 
 @bot.callback_query_handler(func=lambda call: call.data == "v_bucks50")
 def v_bucks50(call):
-  global product
+  global product, cost, description
   product = " 5000 v-bucks"
-  bot.delete_message(call.message.chat.id, call.message.message_id)
-  keyboard = types.InlineKeyboardMarkup(row_width=1)
-  payment = types.InlineKeyboardButton(text="✅ Я оплатил", callback_data="payment")
-  back = types.InlineKeyboardButton(text="Назад", callback_data="v_bucks")
-  keyboard.add(payment, back)
-  bot.send_message(call.message.chat.id, text='''
-🎮 5000 В-баксов
+  cost = 2499
+  description = "После оплаты вам необходимо сообщить данные от вашей учетной записи Epic Games."
 
-💸 Цена: 2499₽
-
-📌 Описание:
-После оплаты вам необходимо сообщить данные от вашей учетной записи Epic Games.
-
-Оплата происходит на карту: 2202208166272568
-Внимание, отправляйте ровно ту сумму, которая указана в боте!
-
-После завершения платежа, пожалуйста, нажмите кнопку «Я оплатил» и отправьте скриншот с чеком оплаты и укажите ваш @username для получения В-баксов.''', reply_markup=keyboard)
+  prepayment(call)
 
 @bot.callback_query_handler(func=lambda call: call.data == "v_bucks13")
 def v_bucks13(call):
-  global product
+  global product, cost, description
   product = " 13500 v-bucks"
-  bot.delete_message(call.message.chat.id, call.message.message_id)
-  keyboard = types.InlineKeyboardMarkup(row_width=1)
-  payment = types.InlineKeyboardButton(text="✅ Я оплатил", callback_data="payment")
-  back = types.InlineKeyboardButton(text="Назад", callback_data="v_bucks")
-  keyboard.add(payment, back)
-  bot.send_message(call.message.chat.id, text='''
-🎮 13500 В-баксов
+  cost = 5699
+  description = "После оплаты вам необходимо сообщить данные от вашей учетной записи Epic Games."
 
-💸 Цена: 5699₽
-
-📌 Описание:
-После оплаты вам необходимо сообщить данные от вашей учетной записи Epic Games.
-
-Оплата происходит на карту: 2202208166272568
-Внимание, отправляйте ровно ту сумму, которая указана в боте!
-
-После завершения платежа, пожалуйста, нажмите кнопку «Я оплатил» и отправьте скриншот с чеком оплаты и укажите ваш @username для получения В-баксов.''', reply_markup=keyboard)
-
-
+  prepayment(call)
 
 
 @bot.callback_query_handler(func=lambda call: call.data == "gift")
@@ -279,16 +264,15 @@ def gift(call):
   v_bucks22_gift = types.InlineKeyboardButton(text="2200 vb ", callback_data="v_bucks22_gift")
   v_bucks24_gift = types.InlineKeyboardButton(text="2400 vb ", callback_data="v_bucks24_gift")
   v_bucks26_gift = types.InlineKeyboardButton(text="2600 vb ", callback_data="v_bucks26_gift")
+  v_bucks28_gift = types.InlineKeyboardButton(text="2800 vb ", callback_data="v_bucks28_gift")
   v_bucks35_gift = types.InlineKeyboardButton(text="3500 vb", callback_data="v_bucks35_gift")
   back = types.InlineKeyboardButton(text="Назад", callback_data="fortnite")
-  keyboard.add(v_bucks6_gift, v_bucks8_gift, v_bucks10_gift, v_bucks12_gift, v_bucks15_gift, v_bucks18_gift, v_bucks20_gift, v_bucks22_gift, v_bucks24_gift, v_bucks26_gift, v_bucks35_gift, back)
+  keyboard.add(v_bucks6_gift, v_bucks8_gift, v_bucks10_gift, v_bucks12_gift, v_bucks15_gift, v_bucks18_gift, v_bucks20_gift, v_bucks22_gift, v_bucks24_gift, v_bucks26_gift, v_bucks28_gift, v_bucks35_gift, back)
 
   gift_img = open('/content/img/gift.jpg', 'rb')
   bot.send_photo(call.message.chat.id, gift_img,caption='''🗒️Категория: Подарки
 
-❗️ДОБАВЛЕНИЕ В ДРУЗЬЯ ОБЯЗАТЕЛЬНО
-
-🎁Наши подарочные аккаунты (ДОБАВЛЯТЬ ВСЕ):
+🎁 Наши подарочные аккаунты (ДОБАВЛЯТЬ ВСЕ) иначе не сможем подарить вам предмет! 🎁
 
 ESQ SHOP80
 ESQ SHOP81
@@ -317,290 +301,158 @@ ESQ SHOP100
 
 @bot.callback_query_handler(func=lambda call: call.data == "v_bucks6_gift")
 def v_bucks6_gift(call):
-  global product
-  product = " 600 v-bucks gift"
-  bot.delete_message(call.message.chat.id, call.message.message_id)
-  keyboard = types.InlineKeyboardMarkup(row_width=1)
-  payment = types.InlineKeyboardButton(text="✅ Я оплатил", callback_data="payment")
-  back = types.InlineKeyboardButton(text="Назад", callback_data="gift")
-  keyboard.add(payment, back)
-  bot.send_message(call.message.chat.id, text='''
-🎮 600 В-баксов подарком
+  global product, cost, description
+  product = " v_bucks 600 gift"
+  cost = 279
+  description = "После оплаты вам необходимо добавить все аккануты в друзья."
 
-💸 Цена: 249₽
-
-📌 Описание:
-После оплаты вам необходимо добавить все аккануты в друзья.
-
-Оплата происходит на карту: 2202208166272568
-Внимание, отправляйте ровно ту сумму, которая указана в боте!
-
-После завершения платежа, пожалуйста, нажмите кнопку «Я оплатил» и отправьте скриншот с чеком оплаты и укажите ваш @username для получения В-баксов.''', reply_markup=keyboard)
-
+  prepayment(call)
 
 @bot.callback_query_handler(func=lambda call: call.data == "v_bucks8_gift")
 def v_bucks8_gift(call):
-  global product
-  product = " 800 v-bucks gift"
-  bot.delete_message(call.message.chat.id, call.message.message_id)
-  keyboard = types.InlineKeyboardMarkup(row_width=1)
-  payment = types.InlineKeyboardButton(text="✅ Я оплатил", callback_data="payment")
-  back = types.InlineKeyboardButton(text="Назад", callback_data="gift")
-  keyboard.add(payment, back)
-  bot.send_message(call.message.chat.id, text='''
+  global product, cost, description
+  product = " v_bucks 800 gift"
+  cost = 349
+  description = "После оплаты вам необходимо добавить все аккануты в друзья."
 
-🎮 800 В-баксов подарком
-
-💸 Цена: 329₽
-
-📌 Описание:
-После оплаты вам необходимо добавить все аккануты в друзья.
-
-Оплата происходит на карту: 2202208166272568
-Внимание, отправляйте ровно ту сумму, которая указана в боте!
-
-После завершения платежа, пожалуйста, нажмите кнопку «Я оплатил» и отправьте скриншот с чеком оплаты и укажите ваш @username для получения В-баксов.''', reply_markup=keyboard)
-
+  prepayment(call)
 
 @bot.callback_query_handler(func=lambda call: call.data == "v_bucks10_gift")
 def v_bucks10_gift(call):
-  global product
-  product = " 1000 v-bucks gift"
-  bot.delete_message(call.message.chat.id, call.message.message_id)
-  keyboard = types.InlineKeyboardMarkup(row_width=1)
-  payment = types.InlineKeyboardButton(text="✅ Я оплатил", callback_data="payment")
-  back = types.InlineKeyboardButton(text="Назад", callback_data="gift")
-  keyboard.add(payment, back)
-  bot.send_message(call.message.chat.id, text='''
-🎮 1000 В-баксов подарком
+  global product, cost, description
+  product = " v_bucks 1000 gift"
+  cost = 429
+  description = "После оплаты вам необходимо добавить все аккануты в друзья."
 
-💸 Цена: 389₽
-
-📌 Описание:
-После оплаты вам необходимо добавить все аккануты в друзья.
-
-Оплата происходит на карту: 2202208166272568
-Внимание, отправляйте ровно ту сумму, которая указана в боте!
-
-После завершения платежа, пожалуйста, нажмите кнопку «Я оплатил» и отправьте скриншот с чеком оплаты и укажите ваш @username для получения В-баксов.''', reply_markup=keyboard)
+  prepayment(call)
 
 @bot.callback_query_handler(func=lambda call: call.data == "v_bucks12_gift")
 def v_bucks12_gift(call):
-  global product
-  product = " 1200 v-bucks gift"
-  bot.delete_message(call.message.chat.id, call.message.message_id)
-  keyboard = types.InlineKeyboardMarkup(row_width=1)
-  payment = types.InlineKeyboardButton(text="✅ Я оплатил", callback_data="payment")
-  back = types.InlineKeyboardButton(text="Назад", callback_data="gift")
-  keyboard.add(payment, back)
-  bot.send_message(call.message.chat.id, text='''
+  global product, cost, description
+  product = " v_bucks 1200 gift"
+  cost = 499
+  description = "После оплаты вам необходимо добавить все аккануты в друзья."
 
-🎮 1200 В-баксов подарком
-
-💸 Цена: 479₽
-
-📌 Описание:
-После оплаты вам необходимо добавить все аккануты в друзья.
-
-Оплата происходит на карту: 2202208166272568
-Внимание, отправляйте ровно ту сумму, которая указана в боте!
-
-После завершения платежа, пожалуйста, нажмите кнопку «Я оплатил» и отправьте скриншот с чеком оплаты и укажите ваш @username для получения В-баксов.''', reply_markup=keyboard)
-
+  prepayment(call)
 
 @bot.callback_query_handler(func=lambda call: call.data == "v_bucks15_gift")
 def v_bucks15_gift(call):
-  global product
-  product = " 1500 v-bucks gift"
-  bot.delete_message(call.message.chat.id, call.message.message_id)
-  keyboard = types.InlineKeyboardMarkup(row_width=1)
-  payment = types.InlineKeyboardButton(text="✅ Я оплатил", callback_data="payment")
-  back = types.InlineKeyboardButton(text="Назад", callback_data="gift")
-  keyboard.add(payment, back)
-  bot.send_message(call.message.chat.id, text='''
+  global product, cost, description
+  product = " v_bucks 1500 gift"
+  cost = 569
+  description = "После оплаты вам необходимо добавить все аккануты в друзья."
 
-
-🎮 1500 В-баксов подарком
-
-💸 Цена: 529₽
-
-📌 Описание:
-После оплаты вам необходимо добавить все аккануты в друзья.
-
-Оплата происходит на карту: 2202208166272568
-Внимание, отправляйте ровно ту сумму, которая указана в боте!
-
-После завершения платежа, пожалуйста, нажмите кнопку «Я оплатил» и отправьте скриншот с чеком оплаты и укажите ваш @username для получения В-баксов.''', reply_markup=keyboard)
+  prepayment(call)
 
 @bot.callback_query_handler(func=lambda call: call.data == "v_bucks18_gift")
 def v_bucks18_gift(call):
-  global product
-  product = " 1800 v-bucks gift"
-  bot.delete_message(call.message.chat.id, call.message.message_id)
-  keyboard = types.InlineKeyboardMarkup(row_width=1)
-  payment = types.InlineKeyboardButton(text="✅ Я оплатил", callback_data="payment")
-  back = types.InlineKeyboardButton(text="Назад", callback_data="gift")
-  keyboard.add(payment, back)
-  bot.send_message(call.message.chat.id, text='''
+  global product, cost, description
+  product = " v_bucks 1800 gift"
+  cost = 649
+  description = "После оплаты вам необходимо добавить все аккануты в друзья."
 
-  🎮 1800 В-баксов подарком
-
-💸 Цена: 599₽
-
-📌 Описание:
-После оплаты вам необходимо добавить все аккануты в друзья.
-
-Оплата происходит на карту: 2202208166272568
-Внимание, отправляйте ровно ту сумму, которая указана в боте!
-
-После завершения платежа, пожалуйста, нажмите кнопку «Я оплатил» и отправьте скриншот с чеком оплаты и укажите ваш @username для получения В-баксов.''', reply_markup=keyboard)
+  prepayment(call)
 
 @bot.callback_query_handler(func=lambda call: call.data == "v_bucks20_gift")
 def v_bucks20_gift(call):
-  global product
-  product = " 2000 v-bucks gift"
-  bot.delete_message(call.message.chat.id, call.message.message_id)
-  keyboard = types.InlineKeyboardMarkup(row_width=1)
-  payment = types.InlineKeyboardButton(text="✅ Я оплатил", callback_data="payment")
-  back = types.InlineKeyboardButton(text="Назад", callback_data="gift")
-  keyboard.add(payment, back)
-  bot.send_message(call.message.chat.id, text='''
+  global product, cost, description
+  product = " v_bucks 2000 gift"
+  cost = 729
+  description = "После оплаты вам необходимо добавить все аккануты в друзья."
 
-🎮 2000 В-баксов подарком
-
-💸 Цена: 649₽
-
-📌 Описание:
-После оплаты вам необходимо добавить все аккануты в друзья.
-
-Оплата происходит на карту: 2202208166272568
-Внимание, отправляйте ровно ту сумму, которая указана в боте!
-
-После завершения платежа, пожалуйста, нажмите кнопку «Я оплатил» и отправьте скриншот с чеком оплаты и укажите ваш @username для получения В-баксов.''', reply_markup=keyboard)
-
+  prepayment(call)
 
 @bot.callback_query_handler(func=lambda call: call.data == "v_bucks22_gift")
 def v_bucks22_gift(call):
-  global product
-  product = " 2200 v-bucks gift"
-  bot.delete_message(call.message.chat.id, call.message.message_id)
-  keyboard = types.InlineKeyboardMarkup(row_width=1)
-  payment = types.InlineKeyboardButton(text="✅ Я оплатил", callback_data="payment")
-  back = types.InlineKeyboardButton(text="Назад", callback_data="gift")
-  keyboard.add(payment, back)
-  bot.send_message(call.message.chat.id, text='''
+  global product, cost, description
+  product = " v_bucks 2200 gift"
+  cost = 799
+  description = "После оплаты вам необходимо добавить все аккануты в друзья."
 
-🎮 2200 В-баксов подарком
-
-💸 Цена: 699₽
-
-📌 Описание:
-После оплаты вам необходимо добавить все аккануты в друзья.
-
-Оплата происходит на карту: 2202208166272568
-Внимание, отправляйте ровно ту сумму, которая указана в боте!
-
-После завершения платежа, пожалуйста, нажмите кнопку «Я оплатил» и отправьте скриншот с чеком оплаты и укажите ваш @username для получения В-баксов.''', reply_markup=keyboard)
-
-
+  prepayment(call)
 
 @bot.callback_query_handler(func=lambda call: call.data == "v_bucks24_gift")
 def v_bucks24_gift(call):
-  global product
-  product = " 2400 v-bucks gift"
-  bot.delete_message(call.message.chat.id, call.message.message_id)
-  keyboard = types.InlineKeyboardMarkup(row_width=1)
-  payment = types.InlineKeyboardButton(text="✅ Я оплатил", callback_data="payment")
-  back = types.InlineKeyboardButton(text="Назад", callback_data="gift")
-  keyboard.add(payment, back)
-  bot.send_message(call.message.chat.id, text='''
+  global product, cost, description
+  product = " v_bucks 2400 gift"
+  cost = 869
+  description = "После оплаты вам необходимо добавить все аккануты в друзья."
 
-🎮 2400 В-баксов подарком
-
-💸 Цена: 639₽
-
-📌 Описание:
-После оплаты вам необходимо добавить все аккануты в друзья.
-
-Оплата происходит на карту: 2202208166272568
-Внимание, отправляйте ровно ту сумму, которая указана в боте!
-
-После завершения платежа, пожалуйста, нажмите кнопку «Я оплатил» и отправьте скриншот с чеком оплаты и укажите ваш @username для получения В-баксов.''', reply_markup=keyboard)
-
+  prepayment(call)
 
 @bot.callback_query_handler(func=lambda call: call.data == "v_bucks26_gift")
 def v_bucks26_gift(call):
-  global product
-  product = " 2600 v-bucks gift"
-  bot.delete_message(call.message.chat.id, call.message.message_id)
-  keyboard = types.InlineKeyboardMarkup(row_width=1)
-  payment = types.InlineKeyboardButton(text="✅ Я оплатил", callback_data="payment")
-  back = types.InlineKeyboardButton(text="Назад", callback_data="gift")
-  keyboard.add(payment, back)
-  bot.send_message(call.message.chat.id, text='''
+  global product, cost, description
+  product = " v_bucks 2400 gift"
+  cost = 929
+  description = "После оплаты вам необходимо добавить все аккануты в друзья."
 
-🎮 2600 В-баксов подарком
+  prepayment(call)
 
-💸 Цена: 699₽
+@bot.callback_query_handler(func=lambda call: call.data == "v_bucks28_gift")
+def v_bucks28_gift(call):
+  global product, cost, description
+  product = " v_bucks 2800 gift"
+  cost = 919
+  description = "После оплаты вам необходимо добавить все аккануты в друзья."
 
-📌 Описание:
-После оплаты вам необходимо добавить все аккануты в друзья.
-
-Оплата происходит на карту: 2202208166272568
-Внимание, отправляйте ровно ту сумму, которая указана в боте!
-
-После завершения платежа, пожалуйста, нажмите кнопку «Я оплатил» и отправьте скриншот с чеком оплаты и укажите ваш @username для получения В-баксов.''', reply_markup=keyboard)
-
+  prepayment(call)
 
 @bot.callback_query_handler(func=lambda call: call.data == "v_bucks35_gift")
 def v_bucks35_gift(call):
-  global product
-  product = " 3500 v-bucks gift"
-  bot.delete_message(call.message.chat.id, call.message.message_id)
-  keyboard = types.InlineKeyboardMarkup(row_width=1)
-  payment = types.InlineKeyboardButton(text="✅ Я оплатил", callback_data="payment")
-  back = types.InlineKeyboardButton(text="Назад", callback_data="gift")
-  keyboard.add(payment, back)
-  bot.send_message(call.message.chat.id, text='''
+  global product, cost, description
+  product = " v_bucks 3500 gift"
+  cost = 1119
+  description = "После оплаты вам необходимо добавить все аккануты в друзья."
 
-
-🎮 3500 В-баксов подарком
-
-💸 Цена: 1 449₽
-
-📌 Описание:
-После оплаты вам необходимо добавить все аккануты в друзья.
-
-Оплата происходит на карту: 2202208166272568
-Внимание, отправляйте ровно ту сумму, которая указана в боте!
-
-После завершения платежа, пожалуйста, нажмите кнопку «Я оплатил» и отправьте скриншот с чеком оплаты и укажите ваш @username для получения В-баксов.''', reply_markup=keyboard)
-
+  prepayment(call)
 
 
 @bot.callback_query_handler(func=lambda call: call.data == "band")
 def band(call):
-  global product
-  product = " band"
+  global product, cost
+  product = "band"
+  cost = 599
   bot.delete_message(call.message.chat.id, call.message.message_id)
-
   keyboard = types.InlineKeyboardMarkup(row_width=1)
-  band = types.InlineKeyboardButton(text="Купить подписку", callback_data="payment")
+  payment = types.InlineKeyboardButton(text="✅ Я оплатил", callback_data="payment")
   back = types.InlineKeyboardButton(text="Назад", callback_data="fortnite")
-  keyboard.add(band, back)
-
+  keyboard.add(payment, back)
   band_img = open('/content/img/band.jpg', 'rb')
-  bot.send_photo(call.message.chat.id, band_img,caption=
+  bot.send_photo(call.message.chat.id, band_img ,caption='''
 
-      '''Товар: Отряд Fortnite
+🎮 Отряд
 
-      Цена: 649₽
+💸 Цена: 599₽
 
-      Подписка активна в течение 30 дней с момента оформления заказа и не подлежит автопродлению.
+📌 Описание:
+Подписка активна в течение 30 дней с момента оформления заказа и не подлежит автопродлению. Перед покупкой Отряда в Fortnite убедитесь, что у вас нет действующей подписки. В противном случае вы можете столкнуться с ошибками в игре, и предметы из отряда не будут доступны!
 
-      ❗️ ВАЖНО: Перед покупкой Отряда в Fortnite убедитесь, что у вас нет действующей подписки. В противном случае вы можете столкнуться с ошибками в игре, и предметы из отряда не будут доступны.''', reply_markup=keyboard)
+Оплата происходит на карту: 2202208166272568
+Внимание, отправляйте ровно ту сумму, которая указана в боте!
 
+После завершения платежа, пожалуйста, нажмите кнопку «Я оплатил» и отправьте скриншот с чеком оплаты и укажите ваш @username для получения В-баксов. А также После оплаты вам необходимо сообщить данные от вашей учетной записи Epic Games или же Xbox.''', reply_markup=keyboard)
 
+@bot.callback_query_handler(func=lambda call: call.data == "prepayment")
+def prepayment(call):
+  global product, description, cost
+  bot.delete_message(call.message.chat.id, call.message.message_id)
+  keyboard = types.InlineKeyboardMarkup(row_width=1)
+  payment = types.InlineKeyboardButton(text="✅ Я оплатил", callback_data="payment")
+  back = types.InlineKeyboardButton(text="Назад", callback_data="fortnite")
+  keyboard.add(payment, back)
+  
+  bot.send_message(call.message.chat.id, text=f'''
+🎮 {product}
+
+💸 Цена: {cost}₽
+
+📌 Описание: {description}
+
+Оплата происходит на карту: 2202208166272568
+Внимание, отправляйте ровно ту сумму, которая указана в боте!
+
+После завершения платежа, пожалуйста, нажмите кнопку «Я оплатил» и отправьте скриншот с чеком оплаты и укажите ваш @username для получения товара.''', reply_markup=keyboard)
 
 @bot.callback_query_handler(func=lambda call: call.data == "payment")
 def payment(call):
@@ -611,36 +463,20 @@ def payment(call):
   keyboard = types.InlineKeyboardMarkup(row_width=1)
   back = types.InlineKeyboardButton(text="Назад", callback_data="fortnite")
   keyboard.add(back)
-  bot.send_message(call.message.chat.id, text='Отправьте скриншот оплаты и с вами свяжутся в скором времени, а также напишите ваш @username вместе с чеком одним сообщением', reply_markup=keyboard)
+  bot.send_message(call.message.chat.id, text='Отправьте скриншот оплаты и с вами свяжутся в скором времени, а также напишите ваш @username вместе с чеком одним сообщением. За статусом платежа можете наблюдать в истории заказов.', reply_markup=keyboard)
 
-  @bot.message_handler(content_types=['photo', 'text'])
-  def forward_mes(message):
-      global pay, history_list, product
-      if pay == 1:
-        if message.content_type == 'photo':
-        
-          keyboard = types.InlineKeyboardMarkup(row_width=1)
-          back = types.InlineKeyboardButton(text="Назад", callback_data="back_to_menu")
-          keyboard.add(back)
-          bot.send_message(message.chat.id, text='Ваша оплата успешно отправлена. Мы обязательно рассмотрим ее и свяжемся с вами в ближайшее время!',reply_markup=keyboard)
-          bot.forward_message(TO_CHAT_ID, message.chat.id, message.message_id)
-          bot.send_message(TO_CHAT_ID, text = product)
-          bot.delete_message(message.chat.id, message.message_id - 1)
-          bot.delete_message(message.chat.id, message.message_id)
+@bot.callback_query_handler(func=lambda call: call.data == "confirm")
+def confirm(call):
+  global history_list, product, cost
 
-          history_list[0] = ""
-          today = date.today()
-          history_list.append((str(today)+" "+product))
+  today = date.today()
+  history_list.append((str(today)+" "+product+ " " +str(cost)+" "+"оплата принята"))
 
-          pay=0
+@bot.callback_query_handler(func=lambda call: call.data == "reject")
+def reject(call):
+  global history_list, product, cost
 
-        else:
-          keyboard = types.InlineKeyboardMarkup(row_width=1)
-          back = types.InlineKeyboardButton(text="Заново", callback_data="payment")
-          keyboard.add(back)
-          bot.reply_to(message, "Произошла ошибка, отправьте скриншот вместе c вашим @username",reply_markup=keyboard)
-          bot.delete_message(message.chat.id, message.message_id-1)
-          bot.delete_message(message.chat.id, message.message_id)
-
+  today = date.today()
+  history_list.append((str(today)+" "+product+ " " +str(cost)+" "+"оплата отклонена"))
 
 bot.polling(non_stop=True)
