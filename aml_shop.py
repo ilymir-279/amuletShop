@@ -2,10 +2,10 @@ import telebot
 from telebot import types
 from datetime import date
 
-token="7757986535:AAGQ-ws4586vY-1A3d_9AdNm_sQb3T_kNNc"
+token="7747531890:AAFDSlj0_dra8nZQBj_n9vpyUtDBNMEn4HI"
 bot = telebot.TeleBot(token)
 
-TO_CHAT_ID = "5756236816"
+TO_CHAT_ID = "7532173117"
 
 
 from_chat_id = ""
