@@ -2,10 +2,10 @@ import telebot
 from telebot import types
 from datetime import date
 
-token="7747531890:AAFDSlj0_dra8nZQBj_n9vpyUtDBNMEn4HI"
+token="7757986535:AAGQ-ws4586vY-1A3d_9AdNm_sQb3T_kNNc"
 bot = telebot.TeleBot(token)
 
-TO_CHAT_ID = "7532173117"
+TO_CHAT_ID = "5756236816"
 
 
 start_id = 1
@@ -112,7 +112,10 @@ def forward_mes(message):
 
       pay=0
     else:
+      bot.delete_message(message.chat.id, message.message_id-1)
+      keyboard.add(back)
       bot.send_message(message.chat.id, text='Похоже, что вы отправили текст или видео. Отправьте фотографию чека вместе с прикреплённым @username для подтверждения оплаты!',reply_markup=keyboard)
+      
 
 @bot.callback_query_handler(func=lambda call: call.data == "catalog")
 def callback_copy_text(call):
