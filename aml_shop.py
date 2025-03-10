@@ -8,9 +8,6 @@ bot = telebot.TeleBot(token)
 TO_CHAT_ID = "7532173117"
 
 
-from_chat_id = ""
-from_chat_call = ""
-
 start_id = 1
 sup = 0
 pay = 0
@@ -86,51 +83,36 @@ def menu(call):
   main_menu_img = open('img/main_menu.jpg', 'rb')
   bot.send_photo(call.message.chat.id, main_menu_img, reply_markup=keyboard)
 
-@bot.message_handler(content_types=['text', 'photo', 'video'])
-def support_forward(message):
-    global sup
-    if sup==1:
-        keyboard = types.InlineKeyboardMarkup(row_width=1)
-        back = types.InlineKeyboardButton(text="Назад", callback_data="back_to_menu")
-        keyboard.add(back)
-        bot.send_message(message.chat.id, text='Ваша жалоба успешно отправлена. Мы обязательно рассмотрим ее и свяжемся с вами в ближайшее время!',reply_markup=keyboard)
-        bot.forward_message(TO_CHAT_ID, message.chat.id, message.message_id)
-        bot.delete_message(message.chat.id, message.message_id - 1)
-        sup=0
-
-@bot.message_handler(content_types=['photo', 'text'])
+@bot.message_handler(content_types=['photo', 'text', "video"])
 def forward_mes(message):
-      global pay, from_chat_id, from_chat_call
-      from_chat_id = message.chat.id
-      from_chat_call = message.message_id
+  global sup, pay
+  
+  keyboard = types.InlineKeyboardMarkup(row_width=1)
+  back = types.InlineKeyboardButton(text="Назад", callback_data="back_to_menu")
+  if sup==1:
+    keyboard.add(back)
+    bot.send_message(message.chat.id, text='Ваша жалоба успешно отправлена. Мы обязательно рассмотрим ее и свяжемся с вами в ближайшее время!',reply_markup=keyboard)
+    bot.forward_message(TO_CHAT_ID, message.chat.id, message.message_id)
+    bot.delete_message(message.chat.id, message.message_id - 1)
+    sup=0
+  elif pay == 1:
+    if message.content_type=="photo":
+      confirm = types.InlineKeyboardButton(text="Принять оплату", callback_data="confirm")
+      reject = types.InlineKeyboardButton(text="Отклонить", callback_data="reject")
+      keyboard.add(back)
 
-      if pay == 1:
-        if message.content_type == 'photo':
+      bot.send_message(message.chat.id, text='Ваша оплата успешно отправлена. Мы обязательно рассмотрим ее и свяжемся с вами в ближайшее время!',reply_markup=keyboard)
 
-          keyboard = types.InlineKeyboardMarkup(row_width=1)
-          back = types.InlineKeyboardButton(text="Назад", callback_data="back_to_menu")
-          confirm = types.InlineKeyboardButton(text="Принять оплату", callback_data="confirm")
-          reject = types.InlineKeyboardButton(text="Отклонить", callback_data="reject")
-          keyboard.add(back)
+      keyboard.add(confirm, reject)
+      bot.forward_message(TO_CHAT_ID, message.chat.id, message.message_id)
+      bot.send_message(TO_CHAT_ID, text = product, reply_markup=keyboard)
 
-          bot.send_message(message.chat.id, text='Ваша оплата успешно отправлена. Мы обязательно рассмотрим ее и свяжемся с вами в ближайшее время!',reply_markup=keyboard)
+      bot.delete_message(message.chat.id, message.message_id - 1)
+      bot.delete_message(message.chat.id, message.message_id)
 
-          keyboard.add(confirm, reject)
-          bot.forward_message(TO_CHAT_ID, message.chat.id, message.message_id)
-          bot.send_message(TO_CHAT_ID, text = product, reply_markup=keyboard)
-
-          bot.delete_message(message.chat.id, message.message_id - 1)
-          bot.delete_message(message.chat.id, message.message_id)
-
-          pay=0
-
-        else:
-          keyboard = types.InlineKeyboardMarkup(row_width=1)
-          back = types.InlineKeyboardButton(text="Заново", callback_data="payment")
-          keyboard.add(back)
-          bot.reply_to(message, "Произошла ошибка, отправьте скриншот вместе c вашим @username",reply_markup=keyboard)
-          bot.delete_message(message.chat.id, message.message_id-1)
-          bot.delete_message(message.chat.id, message.message_id)
+      pay=0
+    else:
+      bot.send_message(message.chat.id, text='Похоже, что вы отправили текст или видео. Отправьте фотографию чека вместе с прикреплённым @username для подтверждения оплаты!',reply_markup=keyboard)
 
 @bot.callback_query_handler(func=lambda call: call.data == "catalog")
 def callback_copy_text(call):
