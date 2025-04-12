@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  aml-bot:
+    build: .
+    container_name: amulett_bot
+    restart: unless-stopped
+    volumes:
+      - ./img:/app/img
+      - ./aml_shop.py:/app/aml_shop.py
